@@ -2,11 +2,9 @@ package main
 //package capture
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/bradyhelms/network-tap-util/src/utils"
 	"log"
-	"os"
 //	"time"
 )
 
@@ -34,13 +32,6 @@ func main() {
     }
 	defer tapClient.Close()
 
-
-    /*
-	if !yesNo("Start packet capture?") {
-		os.Exit(0)
-	}
-    */
-
 	err = utils.RunCommand(tapClient, "nohup /home/petalinux/tap 5")
 	if err != nil {
 		log.Printf("Error running command: %s", err)
@@ -64,20 +55,3 @@ func main() {
 	}
 }
 
-func yesNo(question string) bool {
-	reader := bufio.NewReader(os.Stdin)
-
-	for {
-		fmt.Print(question + " [y/n]: ")
-		input, _ := reader.ReadString('\n')
-
-		if input == "y" {
-			return true
-		} else if input == "n" {
-			return false
-		} else {
-			fmt.Println("Invalid input. Please enter 'y' or 'n'.")
-			return yesNo(question)
-		}
-	}
-}
