@@ -7,6 +7,7 @@ import (
   "golang.org/x/term"
   "log"
   "os"
+  "time"
 )
 
 type SshCreds struct {
@@ -33,6 +34,9 @@ func main() {
     log.Printf("Error running command: %s", err)
   }
 
+  // Wait a bit before trying to program the board
+  time.Sleep(5 * time.Second)
+
   // Program the FPGA board
   almaIP := "192.168.50.54"
   fmt.Println("Connecting to Alma.")
@@ -46,7 +50,10 @@ func main() {
   defer almaClient.Close()
 
   fmt.Println("Progamming the FPGA board.")
-  err = runCommand(almaClient, "cd /opt/bsp_build_20250310/xilinx-sp701-2024.1/images/linux/ && /opt/PetaLinux/scripts/petalinux-boot jtag --prebuilt 3 --hw_server-url 172.13.201.12:3121")
+  err = runCommand(almaClient, "source /opt/Petalinux/settings.sh" +
+                               "&& cd /opt/bsp_build_20250310/xilinx-sp701-2024.1/images/linux/" + 
+                               "&& /opt/PetaLinux/scripts/petalinux-boot jtag --prebuilt 3 " +
+                               "--hw_server-url 172.13.201.12:3121")
   if err != nil {
     log.Printf("Error running command: %s", err)
   }
@@ -95,9 +102,10 @@ func runCommand(client *ssh.Client, cmd string) error {
   }
   defer session.Close()
 
-  backgroundCmd := fmt.Sprintf("nohup %s > /dev/null 2>&1 & exit", cmd)
-  if err := session.Run(backgroundCmd); err != nil {
-    return fmt.Errorf("Failed to run command: %w", err)
+  output, err := session.CombinedOutput(cmd)
+  if err != nil {
+    return fmt.Errorf("Failed to run command: %w.\n\nOutput:\n%s", err, output)
   }
+  fmt.Printf("Output of command '%s':\n%s\n", cmd, output)
   return nil
 }
