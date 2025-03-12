@@ -36,7 +36,7 @@ func GetSshClient(ip string) (*ssh.Client, error) {
 	clientConf := &ssh.ClientConfig{
 		User: creds.User,
 		Auth: []ssh.AuthMethod{
-			publicKeyAuth(),
+//			publicKeyAuth(),
 			ssh.Password(creds.Pass),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
@@ -65,7 +65,7 @@ func RunCommand(client *ssh.Client, cmd string) error {
 	return nil
 }
 
-func publicKeyAuth() ssh.AuthMethod {
+func PublicKeyAuth() ssh.AuthMethod {
 	key, err := os.ReadFile("/path/to/id_rsa")
 	if err != nil {
 		log.Fatal("Failed to read private key: ", err)
@@ -77,4 +77,28 @@ func publicKeyAuth() ssh.AuthMethod {
 	}
 
 	return ssh.PublicKeys(signer)
+}
+
+func GetSshClientWithProxy(proxyClient *ssh.Client, targetIP string) (*ssh.Client, error) {
+    conn, err := proxyClient.Dial("tcp", targetIP+":22")
+    if err != nil {
+        return nil, fmt.Errorf("Failed to create tunnel to %s: %w", targetIP, err)
+    }
+
+    creds := GetSshCredentials(targetIP)
+
+    clientConf := &ssh.ClientConfig{
+        User: creds.User,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(creds.Pass),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+    
+    clientConn, chans, reqs, err := ssh.NewClientConn(conn, targetIP+":22", clientConf)
+    if err != nil {
+        return nil, fmt.Errorf("Failed to establish SSH client connection: %w", err)
+    }
+
+    return ssh.NewClient(clientConn, chans, reqs), nil
 }
