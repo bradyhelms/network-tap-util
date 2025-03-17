@@ -20,6 +20,7 @@ func GetSshCredentials(hostname string) (creds SshCreds) {
 	fmt.Printf("Username: ")
 	fmt.Scanln(&creds.User)
 
+    fmt.Printf("NOTE: You can leave this field blank if using key based auth.")
 	fmt.Printf("Password: ")
 	tempPass, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {

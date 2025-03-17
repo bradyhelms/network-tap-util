@@ -21,11 +21,13 @@ func main() {
 	}
 	defer berthaClient.Close()
 
+    /*
 	fmt.Println("Starting the Vivado hardware server on BERTHA.")
 	err = utils.RunCommand(berthaClient, "nohup /tools/Xilinx/Vivado/2024.1/bin/hw_server > /dev/null 2>&1 & exit")
 	if err != nil {
 		log.Printf("Error running command: %s", err)
 	}
+    */
 
 	// Wait a bit before trying to program the board
 	time.Sleep(5 * time.Second)
@@ -42,6 +44,7 @@ func main() {
 	}
 	defer almaClient.Close()
 
+    /*
 	fmt.Println("Progamming the FPGA board.")
 	err = utils.RunCommand(almaClient, "source /opt/PetaLinux/settings.sh"+
 		"&& cd /opt/bsp_build_20250310/xilinx-sp701-2024.1/images/linux/"+
@@ -50,4 +53,5 @@ func main() {
 	if err != nil {
 		log.Printf("Error running command: %s", err)
 	}
+    */
 }
