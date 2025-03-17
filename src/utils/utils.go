@@ -6,6 +6,7 @@ import (
 	"golang.org/x/term"
 	"log"
 	"os"
+    "path/filepath"
 )
 
 type SshCreds struct {
@@ -36,7 +37,7 @@ func GetSshClient(ip string) (*ssh.Client, error) {
 	clientConf := &ssh.ClientConfig{
 		User: creds.User,
 		Auth: []ssh.AuthMethod{
-//			publicKeyAuth(),
+			PublicKeyAuth(),
 			ssh.Password(creds.Pass),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
@@ -66,17 +67,41 @@ func RunCommand(client *ssh.Client, cmd string) error {
 }
 
 func PublicKeyAuth() ssh.AuthMethod {
-	key, err := os.ReadFile("/path/to/id_rsa")
-	if err != nil {
-		log.Fatal("Failed to read private key: ", err)
-	}
+    sshDir := os.ExpandEnv("$HOME/.ssh")
 
-	signer, err := ssh.ParsePrivateKey(key)
-	if err != nil {
-		log.Fatal("Failed to parse private key: ", err)
-	}
+    files, err := os.ReadDir(sshDir)
+    if err != nil {
+        log.Fatalf("Failed to read SSH directory: %s", err)
+    }
 
-	return ssh.PublicKeys(signer)
+    var signers []ssh.Signer
+
+    for _, file := range files {
+        if file.IsDir() || filepath.Ext(file.Name()) == ".pub" {
+            continue
+        }
+
+        keyPath := filepath.Join(sshDir, file.Name())
+        key, err := os.ReadFile(keyPath)
+        if err != nil {
+            log.Printf("Skipping key %s: failed to read (%s)", keyPath, err)
+            continue
+        }
+
+        signer, err := ssh.ParsePrivateKey(key)
+        if err != nil {
+            log.Printf("Skipping key %s: failed to read (%s)", keyPath, err)
+            continue
+        }
+
+        signers = append(signers, signer)
+    }
+
+    if len(signers) == 0 {
+        log.Fatal("No valid SSH private keys found")
+    }
+
+    return ssh.PublicKeys(signers...)
 }
 
 func GetSshClientWithProxy(proxyClient *ssh.Client, targetIP string) (*ssh.Client, error) {
