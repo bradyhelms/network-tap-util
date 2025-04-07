@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/bradyhelms/network-tap-util/src/utils"
 	"log"
-	"time"
+//	"time"
 )
 
 func main() {
@@ -32,24 +32,28 @@ func main() {
     }
 	defer tapClient.Close()
 
-	err = utils.RunCommand(tapClient, "nohup /home/petalinux/tap 20")
+	err = utils.RunCommand(tapClient, "nohup /home/petalinux/tap 5")
 	if err != nil {
 		log.Printf("Error running command: %s", err)
 	}
 
-	fmt.Println("Running packet capture for 20 seconds.")
+	fmt.Println("Running packet capture for 5 seconds.")
 	fmt.Println("Please wait")
+    /*
 	for i := 1; i < 13; i++ {
 		time.Sleep(5 * time.Second)
 		fmt.Printf(".")
 	}
+*/
 	fmt.Printf("\nDone!\n")
 
 	fmt.Println("Starting .pcap file transfer.")
     // TEMP FIX THIS SHIT
+    /*
 	err = utils.RunCommand(tapClient, "scp -i /home/petalinux/.ssh/dropbear_key.db /home/root/capture.pcap petalinux@192.168.1.209:/home/petalinux/captures")
 	if err != nil {
 		log.Printf("Error receiving file: %s", err)
 	}
+    */
 }
 
